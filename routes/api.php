@@ -3,7 +3,6 @@
 use App\Http\Controllers\PrinterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Mike42\Escpos\PrintConnectors\PrintConnector;
 
 /*
 |--------------------------------------------------------------------------
