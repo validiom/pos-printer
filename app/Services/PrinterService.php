@@ -52,6 +52,70 @@ class PrinterService
 
     }
 
+    public function printFromData($data, int $part = 2)
+    {
+
+        // dd($data);
+        for ($i = 0; $i < $part; $i++) {
+            //heading
+            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
+            $this->printer->text(strtoupper($data['header']) . "\n");
+            $this->printer->setTextSize(2, 2);
+            $this->printer->setEmphasis(true);
+            $this->printer->text($data['title'] . "\n");
+            $this->printer->setEmphasis(false);
+            $this->printer->setTextSize(1, 1);
+            $this->printer->text($data['address'] . "\n");
+            $this->printer->text($data['phones'] . "\n");
+            $this->printer->feed();
+
+            $this->printer->setJustification(Printer::JUSTIFY_LEFT);
+            $this->printer->text("Heure : " . date('Y-m-d h:i') . "\n");
+            $this->printer->text("Code : " . $data['code'] . "\n");
+            $this->printer->text("Caissier: " . $data['cashier'] . "\n");
+            $this->printer->text("-------------------------------\n");
+
+            //Content
+            $this->printer->text("Articles:\n");
+            foreach ($data['items'] as $item) {
+                $this->printer->text($this->writeLine($item['label'], $item['quantity'], $item['amount']));
+            }
+
+            $this->printer->setJustification(Printer::JUSTIFY_RIGHT);
+            $this->printer->text("\nTotal HT: " . $data['total_ht'] . "\n");
+            $this->printer->text("TVA 18%: " . $data['tva'] . "\n");
+            $this->printer->text("Total TTC: " . $data['total_ttc'] . "\n");
+
+            //footer
+            $this->printer->feed();
+            $this->printer->setFont(Printer::FONT_B);
+            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
+            $this->printer->text("-------------------------------\n");
+            $this->printer->text("Les produits vendus ne sont ni echanges ni repris.\n");
+            $this->printer->text("Merci et a tres bientot!" . "\n");
+            $this->printer->text("-------------------------------\n");
+            $this->printer->feed();
+            $this->printer->cut();
+            $this->printer->setFont(Printer::FONT_A);
+
+        }
+
+        $this->printer->close();
+    }
+
+    public function writeLine($label, $qt, $amount)
+    {
+        // Logic to write a line to the printer
+        $t        = "- " . $label . " (x" . $qt . "): ";
+        $ttLenght = strlen($t . $amount);
+        $times    = ceil($ttLenght / 48);
+        $length   = 48 * $times - (strlen($t) + strlen($amount));
+
+        $t .= str_repeat(".", $length);
+        // dd($length, $ttLenght, $times, $t.$amount);
+        return $t . $amount . "\n";
+    }
+
     public function getContent($filename)
     {
         $text    = null;

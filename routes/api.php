@@ -21,3 +21,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('print',[PrinterController::class,'print']);
+Route::post('print_from_data',[PrinterController::class,'printFromData']);
