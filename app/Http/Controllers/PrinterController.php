@@ -14,7 +14,8 @@ class PrinterController extends Controller
         $s = new PrinterService($m);
 
         if ($request->has('raw-text')) {
-            $s->printRawText($request->input('raw-text'),$request->input('part',2));
+            $s->printRawText($request->input('raw-text'),$request->input('part',env('PRINTER_PARTS', 1)));
+            return response()->json(['success' => true], 200);
         } elseif ($request->has('filename')) {
             $s->print($request->input('filename'));
             return response()->json(['success' => true], 200);
@@ -28,7 +29,7 @@ class PrinterController extends Controller
         $m = new PrinterManager();
         $s = new PrinterService($m);
 
-        $s->printFromData($request->all(),$request->input('part',2));
+        $s->printFromData($request->all(),$request->input('part',env('PRINTER_PARTS', 1)));
         return response()->json(['success' => true], 200);
     }
 

@@ -1,14 +1,14 @@
 <?php
 namespace App\Services;
 
-use App\Exceptions\BadConfigExcetpion;
-use App\Managers\PrinterManager;
 use Exception;
-use Illuminate\Support\Facades\Http;
+use Mike42\Escpos\Printer;
+use App\Managers\PrinterManager;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Exceptions\BadConfigExcetpion;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-use Mike42\Escpos\Printer;
 
 class PrinterService
 {
@@ -78,13 +78,24 @@ class PrinterService
             //Content
             $this->printer->text("Articles:\n");
             foreach ($data['items'] as $item) {
-                $this->printer->text($this->writeLine($item['label'], $item['quantity'], $item['amount']));
+                $this->printer->text($this->writeLine($item['label'], $item['quantity'], $item['amount'],$item['price']));
             }
 
             $this->printer->setJustification(Printer::JUSTIFY_RIGHT);
-            $this->printer->text("\nTotal HT: " . $data['total_ht'] . "\n");
-            $this->printer->text("TVA 18%: " . $data['tva'] . "\n");
+            if(isset($data['total_ht'])){
+                $this->printer->text("\nTotal HT: " . $data['total_ht'] . "\n");
+            }
+            if(isset($data['tva'])){
+                $this->printer->text("TVA 18%: " . $data['tva'] . "\n");
+            }
             $this->printer->text("Total TTC: " . $data['total_ttc'] . "\n");
+
+            if($data['others']){
+                $this->printer->text("\nAutres:\n");
+                foreach ($data['others'] as $other) {
+                    $this->printer->text($other['label'] . ": " . $other['value'] . "\n");
+                }
+            }
 
             //footer
             $this->printer->feed();
@@ -103,17 +114,21 @@ class PrinterService
         $this->printer->close();
     }
 
-    public function writeLine($label, $qt, $amount)
+    public function writeLine($label, $qt, $amount,$price)
     {
+        $formatedPrice = number_format($price, 0, '.', ' ');
+        $FormatedAmount = number_format($amount, 0, '.', ' ');
+
+        // dd($formatedPrice, $FormatedAmount);
         // Logic to write a line to the printer
-        $t        = "- " . $label . " (x" . $qt . "): ";
-        $ttLenght = strlen($t . $amount);
+        $t        = "- " . $label . " ( ".$formatedPrice . " x" . $qt . " ): ";
+        $ttLenght = strlen($t . $FormatedAmount);
         $times    = ceil($ttLenght / 48);
-        $length   = 48 * $times - (strlen($t) + strlen($amount));
+        $length   = 48 * $times - (strlen($t) + strlen($FormatedAmount));
 
         $t .= str_repeat(".", $length);
-        // dd($length, $ttLenght, $times, $t.$amount);
-        return $t . $amount . "\n";
+        // dd($length, $ttLenght, $times, $t.$FormatedAmount);
+        return $t . $FormatedAmount . "\n";
     }
 
     public function getContent($filename)
